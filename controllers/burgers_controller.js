@@ -3,7 +3,7 @@
 
 // controlls all functions for one tables routes
 var express = require('express');
-var burger = require("../models/burger");
+var db = require("../models");
 // all api routes
 var router = express.Router();
 
@@ -11,28 +11,46 @@ var router = express.Router();
 
 // -- get route for the root route using express
 // -- this route needs to connect to the burger.js (models) to select all the data
+
+// router.get("route", function)
 router.get("/", function (req, res) {
-    burger.selectAll(function (data) {
-        // this cb `function (data)` becomes cb in burger.js
-        // we are passing this callback function to burger.selectAll
-        // console.log(data);
+    // use db because that's where we require the model Burger
+    // findAll is sequelize syntax to return all of the data
+    db.Burger.findAll().then(function (data) {
+        // res.render = result of the findAll function
+        // res.render("route", {always returns an object - tablename: what you want back})
         res.render("index", { burgers: data });
     });
 });
 
+// router.post("route", function)
 router.post("/burgers/insert", function (req, res) {
-    console.log(req.body);
-
-    burger.insertOne(req.body, function (data) {
+    // create is sequelize syntax that allows you to create new information into the database
+    db.Burger.create(
+        { // only have to specify the columns you need created
+            burger_name: req.body.burger_name,
+            devoured: 0
+        }
+    )(req.body, function (data) {
+        // redirects to root or reloads page
         res.redirect("/");
     });
 });
 
+// router.put("route", function)
 router.put("/burgers/:id", function (req, res) {
-    // var updateBurger = { burger_name: "" };
-    burger.updateOne({ devoured: 1 }, req.params.id, function (data) {
-        res.sendStatus(200);
-    });
+    // update is sequelize syntax that allows you to update existing information in the database
+    db.Burger.update(
+        {
+            devoured: 1
+        },
+        {
+            where: {
+                id: req.params.id
+            }
+        }).then(function (data) {
+            res.sendStatus(200);
+        });
 });
 
 module.exports = router;
